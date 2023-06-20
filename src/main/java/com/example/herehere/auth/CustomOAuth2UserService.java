@@ -1,0 +1,78 @@
+package com.example.herehere.auth;
+
+import com.example.herehere.user.entity.User;
+import com.example.herehere.user.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Service;
+
+import java.util.Map;
+import java.util.Optional;
+
+@Service
+@Slf4j
+public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+
+    private final UserRepository userRepository;
+
+    public CustomOAuth2UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+
+        OAuth2User oAuth2User = super.loadUser(userRequest);
+        log.info("getAttributes : {}", oAuth2User.getAttributes());
+
+
+        String provider = userRequest.getClientRegistration().getRegistrationId();
+
+        OAuth2UserInfo oAuth2UserInfo = null;
+
+        if(provider.equals("kakao")) oAuth2UserInfo = new KakaoUserInfo((Map) oAuth2User.getAttributes());
+
+        String providerId = oAuth2UserInfo.getProviderId();
+        String email = oAuth2UserInfo.getEmail();
+        String nickname = oAuth2UserInfo.getName();
+
+        log.info(email + nickname);
+
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        User user = null;
+
+        if(optionalUser.isEmpty()){
+            user = User.builder()
+                    .email(email)
+                    .nickName(nickname)
+                    .build();
+            userRepository.save(user);
+        }
+
+        else user = optionalUser.get();
+
+        return oAuth2User;
+
+    }
+
+
+
+/*
+    @Override
+    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException{
+        OAuth2User oAuth2User = super.loadUser(userRequest);
+
+        String name = oAuth2User.getAttribute("kakao_account.profile.nickname");
+        String email = oAuth2User.getAttribute("kakao_account.email");
+
+        User user = userRepository.findByEmail(email)
+                .orElseGet(() -> userRepository.save(new User(name , email)));
+
+        return oAuth2User;
+    }
+*/
+
+}
