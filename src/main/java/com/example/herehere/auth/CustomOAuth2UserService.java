@@ -60,19 +60,5 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 
 
-/*
-    @Override
-    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException{
-        OAuth2User oAuth2User = super.loadUser(userRequest);
-
-        String name = oAuth2User.getAttribute("kakao_account.profile.nickname");
-        String email = oAuth2User.getAttribute("kakao_account.email");
-
-        User user = userRepository.findByEmail(email)
-                .orElseGet(() -> userRepository.save(new User(name , email)));
-
-        return oAuth2User;
-    }
-*/
 
 }
